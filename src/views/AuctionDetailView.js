@@ -20,25 +20,25 @@ const AuctionDetailView = (params) => {
   const specs = Object.entries(auction.specs);
 
   return `
-  <section class="max-w-[1240px] mx-auto px-6 py-20 gap-16 grid lg:grid-cols-[1fr_420px]">
+  <section class="max-w-[1240px] mx-auto px-6 md:px-8 py-12 md:py-20 gap-8 md:gap-12 lg:gap-16 grid lg:grid-cols-[1fr_420px]">
     <!-- Product Gallery -->
-    <div class="space-y-8">
-      <div class="aspect-[4/3] rounded-[48px] overflow-hidden border border-white/5 shadow-premium group">
+    <div class="space-y-6 md:space-y-8">
+      <div class="aspect-[4/3] rounded-[32px] md:rounded-[48px] overflow-hidden border border-white/5 shadow-premium group">
         <img id="main-image" src="${auction.images[0]}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${auction.title}" />
       </div>
-      <div class="grid grid-cols-4 gap-6" id="thumbnail-gallery">
+      <div class="grid grid-cols-4 gap-3 md:gap-6" id="thumbnail-gallery">
         ${auction.images.map((img, i) => `
-          <div class="aspect-square rounded-3xl overflow-hidden border ${i === 0 ? 'border-accent-blue/50 opacity-100' : 'border-white/10 opacity-60'} cursor-pointer hover:border-accent-blue/50 transition-all hover:opacity-100 thumb-item" data-img="${img}" data-index="${i}">
+          <div class="aspect-square rounded-2xl md:rounded-3xl overflow-hidden border ${i === 0 ? 'border-accent-blue/50 opacity-100' : 'border-white/10 opacity-60'} cursor-pointer hover:border-accent-blue/50 transition-all hover:opacity-100 thumb-item" data-img="${img}" data-index="${i}">
             <img src="${img}" class="w-full h-full object-cover" alt="Thumbnail ${i + 1}" />
           </div>
         `).join('')}
       </div>
 
       <!-- Description Section -->
-      <div class="pt-12 border-t border-white/5 space-y-6">
-        <h3 class="text-2xl font-bold font-outfit">Product Details</h3>
-        <p class="text-text-muted leading-relaxed text-lg">${auction.description}</p>
-        <div class="grid grid-cols-2 gap-y-6 gap-x-12 pt-6">
+      <div class="pt-8 md:pt-12 border-t border-white/5 space-y-4 md:space-y-6">
+        <h3 class="text-xl md:text-2xl font-bold font-outfit">Product Details</h3>
+        <p class="text-text-muted leading-relaxed text-base md:text-lg">${auction.description}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 md:gap-y-6 gap-x-8 md:gap-x-12 pt-4 md:pt-6">
           ${specs.map(([key, val]) => `
             <div class="space-y-1">
               <p class="text-[10px] font-bold text-text-dark uppercase tracking-widest">${key}</p>
@@ -92,15 +92,15 @@ const AuctionDetailView = (params) => {
               <p class="text-lg font-bold text-text-muted">This auction has ended</p>
             </div>
           ` : `
-            <div class="space-y-4" id="bid-form">
+            <div class="space-y-3 md:space-y-4" id="bid-form">
               <div id="bid-feedback" class="hidden rounded-xl px-4 py-3 text-sm font-semibold"></div>
               <div class="relative">
-                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-text-dark font-bold font-outfit">$</span>
+                <span class="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-text-dark font-bold font-outfit text-base md:text-lg">$</span>
                 <input type="number" id="bid-input" placeholder="${(auction.currentBid + auction.minIncrement).toLocaleString()}+"
                        min="${auction.currentBid + auction.minIncrement}"
-                       class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-10 pr-6 text-xl font-bold font-outfit focus:outline-none focus:border-accent-blue/50 transition-all" />
+                       class="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-4 pl-8 md:pl-10 pr-4 md:pr-6 text-lg md:text-xl font-bold font-outfit focus:outline-none focus:border-accent-blue/50 transition-all" />
               </div>
-              <button id="place-bid-btn" class="w-full bg-accent-blue hover:bg-accent-blue/90 text-white py-5 rounded-2xl text-lg font-bold shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <button id="place-bid-btn" class="w-full bg-accent-blue hover:bg-accent-blue/90 text-white py-4 md:py-5 rounded-xl md:rounded-2xl text-base md:text-lg font-bold shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]">
                 Place a Bid
               </button>
               <p class="text-[10px] text-center text-text-dark uppercase tracking-widest">Minimum increment $${auction.minIncrement}</p>

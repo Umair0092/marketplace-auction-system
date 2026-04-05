@@ -74,12 +74,12 @@ const setupAppShell = () => {
   const app = document.getElementById('app');
   app.innerHTML = `
     <nav class="sticky top-0 z-[100] w-full border-b border-white/5 bg-bg-deep/80 backdrop-blur-2xl">
-      <div class="max-w-[1400px] mx-auto px-10 h-24 flex justify-between items-center">
-        <div class="flex items-center gap-16">
-          <a href="#/" data-link class="font-outfit text-3xl font-black tracking-tighter hover:opacity-80 transition-opacity no-underline text-white">
+      <div class="max-w-[1400px] mx-auto px-6 md:px-10 h-20 md:h-24 flex justify-between items-center">
+        <div class="flex items-center gap-8 md:gap-16">
+          <a href="#/" data-link class="font-outfit text-2xl md:text-3xl font-black tracking-tighter hover:opacity-80 transition-opacity no-underline text-white">
             Bid<span class="text-accent-blue">X</span>
           </a>
-          <div class="hidden md:flex items-center gap-10">
+          <div class="hidden md:flex items-center gap-6 lg:gap-10">
             <a href="#/" data-link class="text-[11px] font-black uppercase tracking-[0.3em] text-text-muted hover:text-white transition-all no-underline">Collection</a>
             <a href="#/search" data-link class="text-[11px] font-black uppercase tracking-[0.3em] text-text-muted hover:text-white transition-all no-underline">Marketplace</a>
             <a href="#/sell" data-link class="text-[11px] font-black uppercase tracking-[0.3em] text-text-muted hover:text-white transition-all no-underline">Sell</a>
@@ -98,42 +98,42 @@ const setupAppShell = () => {
 
     <main id="router-view" class="flex-grow transition-opacity duration-300"></main>
 
-    <footer class="mt-40 bg-[#05050a] border-t border-white/5 pt-32 pb-16">
-      <div class="max-w-[1400px] mx-auto px-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-24">
-          <div class="space-y-8">
-            <div class="font-outfit text-4xl font-black tracking-tighter">Bid<span class="text-accent-blue">X</span></div>
+    <footer class="mt-24 md:mt-32 lg:mt-40 bg-[#05050a] border-t border-white/5 pt-20 md:pt-28 lg:pt-32 pb-12 md:pb-16">
+      <div class="max-w-[1400px] mx-auto px-6 md:px-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16 lg:gap-20 mb-16 md:mb-20 lg:mb-24">
+          <div class="space-y-6 md:space-y-8">
+            <div class="font-outfit text-3xl md:text-4xl font-black tracking-tighter">Bid<span class="text-accent-blue">X</span></div>
             <p class="text-text-muted text-sm leading-relaxed font-medium">
               The premier destination for the acquisition of high-value, time-bound assets. Curating the world's most extraordinary collections for the modern elite.
             </p>
-            <div class="flex gap-4">
+            <div class="flex gap-3 md:gap-4">
                ${['Twitter', 'Discord', 'Insta'].map(social => `
                  <div class="h-10 w-10 rounded-full border border-white/10 flex items-center justify-center text-xs text-text-dark hover:border-white hover:text-white cursor-pointer transition-all">${social[0]}</div>
                `).join('')}
             </div>
           </div>
 
-          <div class="space-y-8">
+          <div class="space-y-6 md:space-y-8">
             <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-white">Navigation</h4>
-            <nav class="flex flex-col gap-5">
+            <nav class="flex flex-col gap-4 md:gap-5">
               <a href="#/" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Explore Assets</a>
               <a href="#/search" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Active Auctions</a>
               <a href="#/sell" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Selling Guide</a>
             </nav>
           </div>
 
-          <div class="space-y-8">
+          <div class="space-y-6 md:space-y-8">
             <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-white">Resources</h4>
-            <nav class="flex flex-col gap-5">
+            <nav class="flex flex-col gap-4 md:gap-5">
               <a href="#" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Help Center</a>
               <a href="#" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Escrow Process</a>
               <a href="#" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Verified Sellers</a>
             </nav>
           </div>
 
-          <div class="space-y-8">
+          <div class="space-y-6 md:space-y-8">
             <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-white">Privacy</h4>
-            <nav class="flex flex-col gap-5">
+            <nav class="flex flex-col gap-4 md:gap-5">
               <a href="#" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Terms of Access</a>
               <a href="#" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">Data Protection</a>
               <a href="#" class="text-sm font-semibold text-text-dark hover:text-accent-blue transition-colors no-underline">KYC/AML Policy</a>
