@@ -4,17 +4,25 @@ const {
   getAuctions,
   getAuction,
   createAuction,
-  placeBid
+  placeBid,
+  closeAuction
 } = require('../controllers/auctionController');
+
+const { protect } = require('../middleware/authMiddleware');
 
 router.route('/')
   .get(getAuctions)
-  .post(createAuction);
+  .post(protect, createAuction);
 
 router.route('/:id')
   .get(getAuction);
 
 router.route('/:id/bid')
-  .post(placeBid);
+  .post(protect, placeBid);
+
+router.route('/:id/close')
+  .patch(protect, closeAuction);
+
+
 
 module.exports = router;

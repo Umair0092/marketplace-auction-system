@@ -5,9 +5,49 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BidX | Premium Auction Marketplace</title>
+    <!-- Tailwind Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              jakarta: ['Plus Jakarta Sans', 'sans-serif'],
+              outfit: ['Outfit', 'sans-serif'],
+            },
+            colors: {
+              bg: {
+                deep: '#05050a',
+                card: '#0c0c16',
+                glass: 'rgba(12, 12, 22, 0.85)',
+              },
+              accent: {
+                blue: '#4f46e5',
+                purple: '#9333ea',
+                cyan: '#06b6d4',
+                rose: '#f43f5e',
+              },
+              text: {
+                main: '#ffffff',
+                muted: '#cbd5e1',
+                dark: '#94a3b8',
+              }
+            },
+            boxShadow: {
+              premium: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+              glow: '0 0 40px rgba(79, 70, 229, 0.2)',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+    </style>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
+

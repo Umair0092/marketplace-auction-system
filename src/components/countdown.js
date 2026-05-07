@@ -1,7 +1,8 @@
 // BidX Countdown Timer Utility
 
 export const formatTimeLeft = (endTime) => {
-  const diff = endTime - Date.now();
+  const diff = new Date(endTime).getTime() - Date.now();
+
   if (diff <= 0) return { text: 'Ended', urgent: false, ended: true };
 
   const hours = Math.floor(diff / 3600000);
@@ -17,7 +18,8 @@ export const formatTimeLeft = (endTime) => {
 };
 
 export const formatTimeShort = (endTime) => {
-  const diff = endTime - Date.now();
+  const diff = new Date(endTime).getTime() - Date.now();
+
   if (diff <= 0) return { text: 'Ended', urgent: false, ended: true };
 
   const hours = Math.floor(diff / 3600000);

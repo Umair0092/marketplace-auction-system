@@ -10,6 +10,10 @@ const auctionItemSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add a description']
   },
+  category: {
+    type: String,
+    required: [true, 'Please add a category']
+  },
   startingPrice: {
     type: Number,
     required: [true, 'Please add a starting price']
@@ -18,9 +22,17 @@ const auctionItemSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  imageUrl: {
-    type: String,
-    default: 'https://via.placeholder.com/150'
+  minIncrement: {
+    type: Number,
+    default: 1
+  },
+  totalBids: {
+    type: Number,
+    default: 0
+  },
+  images: {
+    type: [String],
+    default: []
   },
   endTime: {
     type: Date,
@@ -31,20 +43,21 @@ const auctionItemSchema = new mongoose.Schema({
     enum: ['active', 'closed'],
     default: 'active'
   },
+  seller: {
+    name: String,
+    id: String,
+    rating: Number
+  },
+  specs: {
+    type: Map,
+    of: String
+  },
   bids: [
     {
-      user: {
-        type: String, // For simplicity using string username/id
-        required: true
-      },
-      amount: {
-        type: Number,
-        required: true
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now
-      }
+      bidder: String, // Changed from user to bidder to match frontend
+      amount: Number,
+      time: { type: Date, default: Date.now },
+      isBot: { type: Boolean, default: false }
     }
   ],
   createdAt: {
@@ -54,5 +67,6 @@ const auctionItemSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
 
 module.exports = mongoose.model('AuctionItem', auctionItemSchema);

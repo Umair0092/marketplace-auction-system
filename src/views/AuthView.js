@@ -122,59 +122,76 @@ export const mount = () => {
   });
 
   // Login
-  document.getElementById('login-btn')?.addEventListener('click', () => {
+  document.getElementById('login-btn')?.addEventListener('click', async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const errorEl = document.getElementById('login-error');
+    const btn = document.getElementById('login-btn');
 
-    if (!email || password.length < 3) {
-      errorEl.textContent = 'Please enter a valid email and password (min 3 characters).';
+    try {
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Login failed');
+
+      localStorage.setItem('bidx_token', result.token);
+      localStorage.setItem('bidx_user', JSON.stringify(result.user));
+      store.setState({ user: result.user });
+
+      showToast('success', `Welcome back, ${result.user.name}!`, 'You are now signed in.');
+      window.location.hash = '#/';
+      window.dispatchEvent(new CustomEvent('bidx:authchange'));
+    } catch (err) {
+      errorEl.textContent = err.message;
       errorEl.classList.remove('hidden');
-      return;
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
     }
-
-    const name = email.split('@')[0];
-    const user = { name, email, id: 'user-' + Date.now(), joined: Date.now(), bids: [], listings: [], watchlist: [] };
-    localStorage.setItem('bidx_user', JSON.stringify(user));
-    store.setState({ user });
-
-    showToast('success', `Welcome, ${name}!`, 'You are now signed in to BidX.');
-    window.location.hash = '#/';
-    // Refresh nav
-    window.dispatchEvent(new CustomEvent('bidx:authchange'));
   });
 
   // Register
-  document.getElementById('register-btn')?.addEventListener('click', () => {
+  document.getElementById('register-btn')?.addEventListener('click', async () => {
     const name = document.getElementById('reg-name').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
     const errorEl = document.getElementById('register-error');
+    const btn = document.getElementById('register-btn');
 
-    if (!name || name.length < 2) {
-      errorEl.textContent = 'Display name must be at least 2 characters.';
-      errorEl.classList.remove('hidden');
-      return;
-    }
-    if (!email) {
-      errorEl.textContent = 'Please enter a valid email.';
-      errorEl.classList.remove('hidden');
-      return;
-    }
-    if (password.length < 6) {
-      errorEl.textContent = 'Password must be at least 6 characters.';
-      errorEl.classList.remove('hidden');
-      return;
-    }
+    try {
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
 
-    const user = { name, email, id: 'user-' + Date.now(), joined: Date.now(), bids: [], listings: [], watchlist: [] };
-    localStorage.setItem('bidx_user', JSON.stringify(user));
-    store.setState({ user });
+      const response = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
 
-    showToast('success', `Account created!`, `Welcome to BidX, ${name}.`);
-    window.location.hash = '#/';
-    window.dispatchEvent(new CustomEvent('bidx:authchange'));
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Registration failed');
+
+      localStorage.setItem('bidx_token', result.token);
+      localStorage.setItem('bidx_user', JSON.stringify(result.user));
+      store.setState({ user: result.user });
+
+      showToast('success', `Account created!`, `Welcome to BidX, ${result.user.name}.`);
+      window.location.hash = '#/';
+      window.dispatchEvent(new CustomEvent('bidx:authchange'));
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
   });
+
 };
 
 export default AuthView;

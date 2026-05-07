@@ -7,39 +7,49 @@ const botNames = ['CryptoWhale22', 'VintageFanatic', 'LuxCollector', 'HighRoller
 
 let intervalId = null;
 
-const randomBotBid = () => {
+const randomBotBid = async () => {
   const { auctions, user } = store.getState();
-  const liveAuctions = auctions.filter(a => a.endTime > Date.now());
+  const liveAuctions = auctions.filter(a => new Date(a.endTime).getTime() > Date.now());
   if (liveAuctions.length === 0) return;
 
   const auction = liveAuctions[Math.floor(Math.random() * liveAuctions.length)];
   const bidAmount = auction.currentBid + auction.minIncrement + Math.floor(Math.random() * auction.minIncrement * 3);
   const botName = botNames[Math.floor(Math.random() * botNames.length)];
 
-  store.setState(s => {
-    const idx = s.auctions.findIndex(a => a.id === auction.id);
-    if (idx === -1) return s;
-    s.auctions[idx].currentBid = bidAmount;
-    s.auctions[idx].totalBids += 1;
-    s.auctions[idx].bids.unshift({
-      bidder: botName,
-      amount: bidAmount,
-      time: Date.now(),
-      isBot: true,
+  try {
+    const response = await fetch(`http://localhost:5001/api/auctions/${auction.id || auction._id}/bid`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bidder: botName, amount: bidAmount })
     });
-    return s;
-  });
 
-  store.notify('bid', { auctionId: auction.id, bidder: botName, amount: bidAmount });
+    if (!response.ok) throw new Error('Bot bid failed');
+    const result = await response.json();
+    const updatedAuction = result.data;
 
-  // If user is logged in and had the highest bid on this auction, show outbid toast
-  if (user) {
-    const prev = auction.bids.find(b => b.bidder === user.name);
-    if (prev) {
-      showToast('outbid', 'You\'ve been outbid!', `${botName} bid $${bidAmount.toLocaleString()} on "${auction.title}"`);
+    // Update local store
+    store.setState(s => {
+      const idx = s.auctions.findIndex(a => a.id === updatedAuction._id || a._id === updatedAuction._id);
+      if (idx !== -1) {
+        s.auctions[idx] = { ...updatedAuction, id: updatedAuction._id };
+      }
+      return s;
+    });
+
+    store.notify('bid', { auctionId: updatedAuction._id, bidder: botName, amount: bidAmount });
+
+    // If user is logged in and was the previous highest bidder, show outbid toast
+    if (user) {
+      const userBid = auction.bids.find(b => b.bidder === user.name);
+      if (userBid && bidAmount > userBid.amount) {
+        showToast('outbid', 'You\'ve been outbid!', `${botName} bid $${bidAmount.toLocaleString()} on "${auction.title}"`);
+      }
     }
+  } catch (error) {
+    console.error('Simulator error:', error);
   }
 };
+
 
 export const startSimulator = () => {
   if (intervalId) return;

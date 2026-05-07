@@ -9,17 +9,16 @@ const HomeView = () => {
 
   // Pick 4 trending auctions (most bids, excluding featured)
   const trending = [...auctions]
-    .filter(a => a.id !== featured.id && a.endTime > Date.now())
+    .filter(a => a.id !== featured.id && new Date(a.endTime).getTime() > Date.now())
+
     .sort((a, b) => b.totalBids - a.totalBids)
     .slice(0, 4);
 
   return `
   <!-- Hero Section -->
   <section class="relative min-h-[calc(100vh-6rem)] flex items-center justify-center overflow-hidden px-6 md:px-10 py-20">
-    <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 blur-[160px] rounded-full"></div>
-    <div class="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] bg-purple-600/10 blur-[180px] rounded-full"></div>
-
     <div class="max-w-[1400px] mx-auto w-full grid lg:grid-cols-2 gap-16 lg:gap-32 items-center relative z-10">
+
       <div class="space-y-12 text-center lg:text-left">
         <div class="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-white/5 border border-white/10 text-text-muted text-[10px] font-black uppercase tracking-[0.4em]">
           <span class="relative flex h-2 w-2">
@@ -40,7 +39,8 @@ const HomeView = () => {
         </p>
 
         <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-6">
-          <a href="#/search" class="bg-accent-blue hover:bg-white hover:text-accent-blue text-white px-10 py-4 rounded-full text-xs md:text-sm font-black uppercase tracking-widest transition-all hover:scale-105 shadow-glow no-underline ring-1 ring-accent-blue/50 text-center">
+          <a href="#/search" class="bg-accent-blue hover:bg-white hover:text-accent-blue text-white px-10 py-4 rounded-full text-xs md:text-sm font-black uppercase tracking-widest transition-all hover:scale-105 no-underline ring-1 ring-accent-blue/50 text-center">
+
             Enter Marketplace
           </a>
           <button class="bg-white/5 hover:bg-white/10 text-white px-10 py-4 rounded-full text-xs md:text-sm font-black uppercase tracking-widest border border-white/10 transition-all hover:scale-105">
@@ -53,7 +53,8 @@ const HomeView = () => {
       <a href="#/auction/${featured.id}" class="relative hidden lg:block perspective-1000 no-underline text-white group">
         <div class="relative z-10 p-16 glass-effect rounded-[80px] border-white/10 shadow-premium transform rotate-3 hover:rotate-0 transition-all duration-1000">
           <div class="aspect-square rounded-[50px] overflow-hidden mb-12 shadow-2xl ring-1 ring-white/10">
-            <img src="${featured.images[0]}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${featured.title}" />
+            <img src="${featured.images && featured.images.length > 0 ? featured.images[0] : 'https://via.placeholder.com/800x800?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${featured.title}" />
+
           </div>
           <div class="space-y-6">
             <div class="flex justify-between items-center">
@@ -76,10 +77,10 @@ const HomeView = () => {
             </div>
           </div>
         </div>
-        <div class="absolute inset-0 bg-indigo-500/20 blur-[100px] rounded-full -z-10 animate-pulse"></div>
       </a>
     </div>
   </section>
+
 
   <!-- Trending Auctions -->
   <section class="max-w-[1400px] mx-auto px-6 md:px-10 py-20 md:py-32 border-t border-white/5">
@@ -96,8 +97,10 @@ const HomeView = () => {
         const t = formatTimeLeft(auction.endTime);
         return `
         <a href="#/auction/${auction.id}" class="group cursor-pointer no-underline text-white block">
-          <div class="aspect-[4/5] rounded-[40px] overflow-hidden bg-white/5 border border-white/5 mb-8 transition-all duration-700 group-hover:border-accent-blue/30 group-hover:shadow-glow ring-1 ring-white/5 hover:ring-white/10 relative">
-            <img src="${auction.images[0]}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110 opacity-40 group-hover:opacity-100" alt="${auction.title}" />
+          <div class="aspect-[4/5] rounded-[40px] overflow-hidden bg-white/5 border border-white/5 mb-8 transition-all duration-700 group-hover:border-accent-blue/30 ring-1 ring-white/5 hover:ring-white/10 relative">
+
+            <img src="${auction.images && auction.images.length > 0 ? auction.images[0] : 'https://via.placeholder.com/600x800?text=No+Image'}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110 opacity-40 group-hover:opacity-100" alt="${auction.title}" />
+
             <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
               <span class="px-3 py-1 rounded-full bg-black/50 backdrop-blur-xl text-[9px] font-black text-white uppercase tracking-widest border border-white/10">${t.ended ? 'Ended' : t.text}</span>
               <span class="px-3 py-1 rounded-full bg-black/50 backdrop-blur-xl text-[9px] font-black text-white uppercase tracking-widest border border-white/10">${auction.totalBids} bids</span>

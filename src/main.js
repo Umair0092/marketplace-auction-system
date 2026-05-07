@@ -55,11 +55,13 @@ const renderAuthButton = () => {
     // Sign out
     document.getElementById('sign-out-btn')?.addEventListener('click', () => {
       localStorage.removeItem('bidx_user');
+      localStorage.removeItem('bidx_token');
       store.setState({ user: null });
       showToast('info', 'Signed out', 'You have been signed out of BidX.');
       window.location.hash = '#/';
       renderAuthButton();
     });
+
   } else {
     container.innerHTML = `
       <a href="#/auth" class="bg-white text-black hover:bg-accent-blue hover:text-white px-10 py-3.5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 shadow-premium no-underline">
@@ -155,10 +157,71 @@ const setupAppShell = () => {
   `;
 };
 
+// Fetch all auctions from backend
+const fetchAuctions = async () => {
+  try {
+    const response = await fetch('http://localhost:5001/api/auctions');
+    if (!response.ok) throw new Error('Failed to fetch from backend');
+    const result = await response.json();
+    const backendAuctions = result.data.map(a => ({ ...a, id: a._id }));
+
+    const { user, auctions: oldAuctions } = store.getState();
+
+    // Outbid detection
+    if (user) {
+      backendAuctions.forEach(newA => {
+        const oldA = oldAuctions.find(a => a.id === newA.id);
+        if (oldA && newA.currentBid > oldA.currentBid) {
+          // If user was winning before but now someone else is
+          const wasWinning = oldA.bids.length > 0 && oldA.bids[0].bidder === user.name;
+          const isWinningNow = newA.bids.length > 0 && newA.bids[0].bidder === user.name;
+          if (wasWinning && !isWinningNow) {
+            showToast('outbid', 'You\'ve been outbid!', `Someone bid $${newA.currentBid.toLocaleString()} on "${newA.title}"`);
+          }
+          // Notify views of new bid
+          store.notify('bid', { auctionId: newA.id, bidder: newA.bids[0].bidder, amount: newA.currentBid });
+        }
+
+        // Win Detection: If it just ended and user was the highest bidder
+        const isEndedNow = new Date(newA.endTime).getTime() <= Date.now();
+        const wasActiveBefore = oldA && new Date(oldA.endTime).getTime() > Date.now();
+        
+        if (isEndedNow && wasActiveBefore) {
+          const isWinner = newA.bids.length > 0 && newA.bids[0].bidder === user.name;
+          if (isWinner) {
+            showToast('success', '🏆 CONGRATULATIONS!', `You won the auction for "${newA.title}" with a bid of $${newA.currentBid.toLocaleString()}!`);
+          } else if (newA.bids.some(b => b.bidder === user.name)) {
+            showToast('info', 'Auction Ended', `The auction for "${newA.title}" has closed. Better luck next time!`);
+          }
+        }
+      });
+    }
+
+
+    // Merge with mock auctions
+    store.setState(s => {
+      const existingIds = new Set(backendAuctions.map(a => a.id));
+      const filteredMocks = s.auctions.filter(a => !existingIds.has(a.id));
+      return { ...s, auctions: [...backendAuctions, ...filteredMocks] };
+    });
+  } catch (error) {
+    console.error('Backend sync failed:', error);
+  }
+};
+
+
 setupAppShell();
 renderAuthButton();
 initRouter();
 startSimulator();
 
+// Initial fetch and start periodic polling (every 5s)
+fetchAuctions();
+const pollInterval = setInterval(fetchAuctions, 5000);
+
+registerCleanup(() => clearInterval(pollInterval));
+
 // Re-render auth button when auth state changes
 window.addEventListener('bidx:authchange', renderAuthButton);
+
+

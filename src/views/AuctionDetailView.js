@@ -24,15 +24,17 @@ const AuctionDetailView = (params) => {
     <!-- Product Gallery -->
     <div class="space-y-6 md:space-y-8">
       <div class="aspect-[4/3] rounded-[32px] md:rounded-[48px] overflow-hidden border border-white/5 shadow-premium group">
-        <img id="main-image" src="${auction.images[0]}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${auction.title}" />
+        <img id="main-image" src="${auction.images && auction.images.length > 0 ? auction.images[0] : 'https://via.placeholder.com/800x600?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${auction.title}" />
+
       </div>
       <div class="grid grid-cols-4 gap-3 md:gap-6" id="thumbnail-gallery">
-        ${auction.images.map((img, i) => `
+        ${(auction.images || []).map((img, i) => `
           <div class="aspect-square rounded-2xl md:rounded-3xl overflow-hidden border ${i === 0 ? 'border-accent-blue/50 opacity-100' : 'border-white/10 opacity-60'} cursor-pointer hover:border-accent-blue/50 transition-all hover:opacity-100 thumb-item" data-img="${img}" data-index="${i}">
             <img src="${img}" class="w-full h-full object-cover" alt="Thumbnail ${i + 1}" />
           </div>
         `).join('')}
       </div>
+
 
       <!-- Description Section -->
       <div class="pt-8 md:pt-12 border-t border-white/5 space-y-4 md:space-y-6">
@@ -103,10 +105,18 @@ const AuctionDetailView = (params) => {
               <button id="place-bid-btn" class="w-full bg-accent-blue hover:bg-accent-blue/90 text-white py-4 md:py-5 rounded-xl md:rounded-2xl text-base md:text-lg font-bold shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]">
                 Place a Bid
               </button>
+              
+              ${(store.getState().user?.id === auction.seller?.id || store.getState().user?.name === auction.seller?.name) ? `
+                <button id="close-auction-btn" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 py-4 rounded-2xl text-sm font-bold border border-rose-500/20 transition-all mt-4">
+                  End Auction Early
+                </button>
+              ` : ''}
+
               <p class="text-[10px] text-center text-text-dark uppercase tracking-widest">Minimum increment $${auction.minIncrement}</p>
             </div>
           `}
         </div>
+
 
         <div class="p-6 bg-white/5 border border-white/5 rounded-3xl flex items-center gap-4">
           <div class="h-12 w-12 rounded-full bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
@@ -152,7 +162,8 @@ export const mount = (params) => {
       return;
     }
 
-    if (auction.endTime <= Date.now()) {
+    if (new Date(auction.endTime).getTime() <= Date.now()) {
+
       showToast('error', 'Auction ended', 'This auction is no longer accepting bids.');
       return;
     }
@@ -164,54 +175,73 @@ export const mount = (params) => {
     const feedback = document.getElementById('bid-feedback');
 
     if (!amount || amount < minRequired) {
+    if (!bidAmount || bidAmount < minRequired) {
       feedback.className = 'rounded-xl px-4 py-3 text-sm font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20';
       feedback.textContent = `Minimum bid is $${minRequired.toLocaleString()}`;
       feedback.classList.remove('hidden');
       return;
     }
 
-    // Place the bid
-    store.setState(s => {
-      const idx = s.auctions.findIndex(a => a.id === auctionId);
-      if (idx === -1) return s;
-      s.auctions[idx].currentBid = amount;
-      s.auctions[idx].totalBids += 1;
-      s.auctions[idx].bids.unshift({
-        bidder: s.user.name,
-        amount,
-        time: Date.now(),
-        isBot: false,
+    // Place the bid via API
+    fetch(`http://localhost:5001/api/auctions/${auctionId}/bid`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('bidx_token')}`
+      },
+      body: JSON.stringify({ amount: bidAmount })
+    })
+    .then(res => res.json())
+    .then(result => {
+      if (!result.success) throw new Error(result.message);
+
+      const updatedAuction = result.data;
+      
+      // Update local store
+      store.setState(s => {
+        const idx = s.auctions.findIndex(a => a.id === auctionId || a._id === auctionId);
+        if (idx !== -1) {
+          s.auctions[idx] = { ...updatedAuction, id: updatedAuction._id };
+        }
+        return s;
       });
-      return s;
+
+      // Update UI
+      const bidDisplay = document.getElementById('current-bid-display');
+      const totalBids = document.getElementById('total-bids');
+      const statusBadge = document.getElementById('bid-status-badge');
+
+      if (bidDisplay) {
+        bidDisplay.textContent = '$' + amount.toLocaleString();
+        bidDisplay.classList.add('text-accent-cyan');
+        setTimeout(() => bidDisplay.classList.remove('text-accent-cyan'), 2000);
+      }
+
+      if (totalBids) totalBids.textContent = updatedAuction.totalBids;
+
+      if (statusBadge) {
+        statusBadge.textContent = 'You\'re Winning!';
+        statusBadge.className = 'text-sm font-medium text-emerald-400';
+      }
+
+      feedback.className = 'rounded-xl px-4 py-3 text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+      feedback.textContent = `Bid of $${amount.toLocaleString()} placed successfully!`;
+      feedback.classList.remove('hidden');
+
+      input.value = '';
+      input.placeholder = (amount + updatedAuction.minIncrement).toLocaleString() + '+';
+      input.min = amount + updatedAuction.minIncrement;
+
+      showToast('success', 'Bid placed!', `You bid $${amount.toLocaleString()} on "${updatedAuction.title}"`);
+      updateBidHistory(auctionId);
+    })
+    .catch(err => {
+      console.error(err);
+      feedback.className = 'rounded-xl px-4 py-3 text-sm font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20';
+      feedback.textContent = err.message || 'Failed to place bid. Please try again.';
+      feedback.classList.remove('hidden');
     });
 
-    // Update UI
-    const bidDisplay = document.getElementById('current-bid-display');
-    const totalBids = document.getElementById('total-bids');
-    const statusBadge = document.getElementById('bid-status-badge');
-
-    bidDisplay.textContent = '$' + amount.toLocaleString();
-    bidDisplay.classList.add('text-accent-cyan');
-    setTimeout(() => bidDisplay.classList.remove('text-accent-cyan'), 2000);
-
-    const updatedAuction = store.getState().auctions.find(a => a.id === auctionId);
-    totalBids.textContent = updatedAuction.totalBids;
-
-    statusBadge.textContent = 'You\'re Winning!';
-    statusBadge.className = 'text-sm font-medium text-emerald-400';
-
-    feedback.className = 'rounded-xl px-4 py-3 text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-    feedback.textContent = `Bid of $${amount.toLocaleString()} placed successfully!`;
-    feedback.classList.remove('hidden');
-
-    input.value = '';
-    input.placeholder = (amount + updatedAuction.minIncrement).toLocaleString() + '+';
-    input.min = amount + updatedAuction.minIncrement;
-
-    showToast('success', 'Bid placed!', `You bid $${amount.toLocaleString()} on "${updatedAuction.title}"`);
-
-    // Update bid history
-    updateBidHistory(auctionId);
   });
 
   // Live countdown
@@ -268,6 +298,39 @@ export const mount = (params) => {
 
     updateBidHistory(auctionId);
   });
+
+  // End auction early (for owners)
+  document.getElementById('close-auction-btn')?.addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to end this auction early? The current highest bidder will win.')) return;
+
+    try {
+      const response = await fetch(`http://localhost:5001/api/auctions/${auctionId}/close`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('bidx_token')}`
+        }
+      });
+
+
+      if (!response.ok) throw new Error('Failed to close auction');
+
+      const result = await response.json();
+      showToast('success', 'Auction Ended', 'You have manually closed this auction.');
+      
+      // Update local store and re-render
+      store.setState(s => {
+        const idx = s.auctions.findIndex(a => a.id === auctionId || a._id === auctionId);
+        if (idx !== -1) s.auctions[idx] = { ...result.data, id: result.data._id };
+        return s;
+      });
+      
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Action failed', 'Could not close the auction. Please try again.');
+    }
+  });
+
 
   registerCleanup(() => {
     clearInterval(timerInterval);
